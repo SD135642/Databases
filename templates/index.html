@@ -8,14 +8,14 @@
 
 
 <body>
-  <h1>Some famous Computer Scientists</h1>
-  <div>{{data}}</div>
+  <h1>Restaurants in your area</h1>
 
-  <div>
+
+  <ul>
     {% for n in data %}
-    <div>{{n}}</div>
+    <div><a href="/restaurant/{{ n.id }}">{{ n.name }}</a></div>
     {% endfor %}
-  </div>
+  </ul>
 
 <p><a href="another">Go to the other page</a></p>
 

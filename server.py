@@ -118,11 +118,12 @@ def index():
 	#
 	# example of a database query
 	#
-	select_query = "SELECT name from test"
+	select_query = "SELECT restaurant_id, restaurant_name FROM RESTAURANTS"
 	cursor = g.conn.execute(text(select_query))
-	names = []
+	restaurants = []
 	for result in cursor:
-		names.append(result[0])
+		restaurant_id, restaurant_name = result
+		restaurants.append({"id": restaurant_id, "name": restaurant_name})
 	cursor.close()
 
 	#
@@ -151,7 +152,7 @@ def index():
 	#     <div>{{n}}</div>
 	#     {% endfor %}
 	#
-	context = dict(data = names)
+	context = dict(data = restaurants)
 
 
 	#
@@ -172,50 +173,87 @@ def index():
 def another():
 	return render_template("another.html")
 
+@app.route('/restaurant/<string:restaurant_id>')
+def restaurant_page(restaurant_id):
+    restaurant_data = get_restaurant_info(restaurant_id)
+    categories_data = get_categories_data(restaurant_id)
+    items_data = get_items_data(restaurant_id)
+    return render_template('restaurant.html', restaurant=restaurant_data, categories=categories_data, items=items_data)
+
+def get_restaurant_info(restaurant_id):
+    select_query_restaurant = "SELECT * FROM RESTAURANTS WHERE restaurant_id = :restaurant_id"
+    cursor = g.conn.execute(text(select_query_restaurant), {"restaurant_id": restaurant_id})
+    result = cursor.fetchone()
+
+    restaurant_id, restaurant_name, restaurant_address, city, restaurant_contact_num = result
+    restaurant = {"id": restaurant_id, "name": restaurant_name, "address": restaurant_address, "city": city, "phone_number": restaurant_contact_num}
+    cursor.close()
+    return restaurant
+
+def get_categories_data(restaurant_id):
+    select_query_menu = "SELECT product_category FROM MENU WHERE restaurant_id = :restaurant_id"
+    cursor = g.conn.execute(text(select_query_menu), {"restaurant_id": restaurant_id})
+    categories = []
+    for result in cursor:
+        product_category = result
+        categories.append({"category": product_category})
+    cursor.close()
+    return categories
+
+def get_items_data(restaurant_id):
+    select_query_items = "SELECT item_price, item_description FROM menu_items WHERE restaurant_id = :restaurant_id"
+    cursor = g.conn.execute(text(select_query_items), {"restaurant_id": restaurant_id})
+    items = []
+    for result in cursor:
+        item_price, item_description = result
+        items.append({"price": item_price, "description": item_description})
+    cursor.close()
+    return items
+
 
 # Example of adding new data to the database
-@app.route('/add', methods=['POST'])
-def add():
+@app.route('/add_to_cart', methods=['POST'])
+def add_to_cart():
 	# accessing form inputs from user
-	name = request.form['name']
+    name = request.form['name']
 	
 	# passing params in for each variable into query
-	params = {}
-	params["new_name"] = name
-	g.conn.execute(text('INSERT INTO test(name) VALUES (:new_name)'), params)
-	g.conn.commit()
-	return redirect('/')
+    params = {}
+    params["new_name"] = name
+    g.conn.execute(text('INSERT INTO test(name) VALUES (:new_name)'), params)
+    g.conn.commit()
+    return redirect('/')
 
 
 @app.route('/login')
 def login():
-	abort(401)
-	this_is_never_executed()
+    abort(401)
+    this_is_never_executed()
 
 
 if __name__ == "__main__":
-	import click
+    import click
 
-	@click.command()
-	@click.option('--debug', is_flag=True)
-	@click.option('--threaded', is_flag=True)
-	@click.argument('HOST', default='0.0.0.0')
-	@click.argument('PORT', default=8111, type=int)
-	def run(debug, threaded, host, port):
-		"""
-		This function handles command line parameters.
-		Run the server using:
+    @click.command()
+    @click.option('--debug', is_flag=True)
+    @click.option('--threaded', is_flag=True)
+    @click.argument('HOST', default='0.0.0.0')
+    @click.argument('PORT', default=8111, type=int)
+    def run(debug, threaded, host, port):
+        """
+        This function handles command line parameters.
+        Run the server using:
 
-			python server.py
+            python server.py
 
-		Show the help text using:
+        Show the help text using:
 
-			python server.py --help
+            python server.py --help
 
-		"""
+        """
 
-		HOST, PORT = host, port
-		print("running on %s:%d" % (HOST, PORT))
-		app.run(host=HOST, port=PORT, debug=debug, threaded=threaded)
+        HOST, PORT = host, port
+        print("running on %s:%d" % (HOST, PORT))
+        app.run(host=HOST, port=PORT, debug=debug, threaded=threaded)
 
 run()

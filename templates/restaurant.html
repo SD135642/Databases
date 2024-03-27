@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<body>
+    <h1>{{ restaurant.name }}</h1>
+    <p>Address: {{ restaurant.address }}</p>
+    <p>City: {{ restaurant.city }}</p>
+    <p>Phone: {{ restaurant.phone_number }}</p>
+    <br><hr>
+    <h1>MENU</h1>
+    <h2>Food categories:</h2>
+    <ul>
+        {% for category in categories %}
+        <h3><li>{{ category.category | replace("('", "") | replace("',)", "") }}</li></h3>
+        {% endfor %}
+    </ul>
+
+    <h2>Menu items:</h2>
+    <ul>
+        {% for item in items %}
+        <h3><li>
+            {{ item.description }} - {{ item.price }}
+            <form action="/add_to_cart" method="post">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <input type="submit" value="Add">
+            </form>
+        </li></h3>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>
