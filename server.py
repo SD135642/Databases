@@ -8,7 +8,7 @@ A debugger such as "pdb" may be helpful for debugging.
 Read about it online.
 """
 import os
-  # accessible as a variable in index.html:
+  # accessible as a variable in homepage.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response
@@ -17,18 +17,6 @@ tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
 
-#
-# The following is a dummy URI that does not connect to a valid database. You will need to modify it to connect to your Part 2 database in order to use the data.
-#
-# XXX: The URI should be in the format of: 
-#
-#     postgresql://USER:PASSWORD@34.73.36.248/project1
-#
-# For example, if you had username zy2431 and password 123123, then the following line would be:
-#
-#     DATABASEURI = "postgresql://zy2431:123123@34.73.36.248/project1"
-#
-# Modify these with your own credentials you received from TA!
 DATABASE_USERNAME = "sz3120"
 DATABASE_PASSWRD = "zelendubrovina"
 DATABASE_HOST = "35.212.75.104" # change to 34.28.53.86 if you used database 2 for part 2
@@ -87,8 +75,8 @@ def teardown_request(exception):
 
 
 #
-# @app.route is a decorator around index() that means:
-#   run index() whenever the user tries to access the "/" path using a GET request
+# @app.route is a decorator around homepage() that means:
+#   run homepage() whenever the user tries to access the "/" path using a GET request
 #
 # If you wanted the user to go to, for example, localhost:8111/foobar/ with POST or GET then you could use:
 #
@@ -100,24 +88,8 @@ def teardown_request(exception):
 # see for decorators: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
 #
 @app.route('/')
-def index():
-	"""
-	request is a special object that Flask provides to access web request information:
+def homepage():
 
-	request.method:   "GET" or "POST"
-	request.form:     if the browser submitted a form, this contains the data in the form
-	request.args:     dictionary of URL arguments, e.g., {a:1, b:2} for http://localhost?a=1&b=2
-
-	See its API: https://flask.palletsprojects.com/en/1.1.x/api/#incoming-request-data
-	"""
-
-	# DEBUG: this is debugging code to see what request looks like
-	print(request.args)
-
-
-	#
-	# example of a database query
-	#
 	select_query = "SELECT restaurant_id, restaurant_name FROM RESTAURANTS"
 	cursor = g.conn.execute(text(select_query))
 	restaurants = []
@@ -126,52 +98,10 @@ def index():
 		restaurants.append({"id": restaurant_id, "name": restaurant_name})
 	cursor.close()
 
-	#
-	# Flask uses Jinja templates, which is an extension to HTML where you can
-	# pass data to a template and dynamically generate HTML based on the data
-	# (you can think of it as simple PHP)
-	# documentation: https://realpython.com/primer-on-jinja-templating/
-	#
-	# You can see an example template in templates/index.html
-	#
-	# context are the variables that are passed to the template.
-	# for example, "data" key in the context variable defined below will be 
-	# accessible as a variable in index.html:
-	#
-	#     # will print: [u'grace hopper', u'alan turing', u'ada lovelace']
-	#     <div>{{data}}</div>
-	#     
-	#     # creates a <div> tag for each element in data
-	#     # will print: 
-	#     #
-	#     #   <div>grace hopper</div>
-	#     #   <div>alan turing</div>
-	#     #   <div>ada lovelace</div>
-	#     #
-	#     {% for n in data %}
-	#     <div>{{n}}</div>
-	#     {% endfor %}
-	#
 	context = dict(data = restaurants)
+	return render_template("homepage.html", **context)
 
 
-	#
-	# render_template looks in the templates/ folder for files.
-	# for example, the below file reads template/index.html
-	#
-	return render_template("index.html", **context)
-
-#
-# This is an example of a different path.  You can see it at:
-# 
-#     localhost:8111/another
-#
-# Notice that the function name is another() rather than index()
-# The functions for each app.route need to have different names
-#
-@app.route('/another')
-def another():
-	return render_template("another.html")
 
 @app.route('/restaurant/<string:restaurant_id>')
 def restaurant_page(restaurant_id):
@@ -215,14 +145,20 @@ def get_items_data(restaurant_id):
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
 	# accessing form inputs from user
-    name = request.form['name']
-	
-	# passing params in for each variable into query
-    params = {}
-    params["new_name"] = name
-    g.conn.execute(text('INSERT INTO test(name) VALUES (:new_name)'), params)
-    g.conn.commit()
-    return redirect('/')
+    item_id = request.form['item_id']
+    existing_order = Order.query.first()
+    current_order_id = 5
+
+    if existing_order:  # this order was already started
+        params = {}
+        params["item_id"] = item_id
+        # instead of inserting it should be appending to the list of values
+        g.conn.execute(text('INSERT INTO ORDERS(items_ordered) VALUES (:item_id)'), params)
+        g.conn.commit()
+    #else: # need to create a new order and add the item
+
+
+
 
 
 @app.route('/login')
