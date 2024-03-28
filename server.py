@@ -12,6 +12,7 @@ import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, request, render_template, g, redirect, Response, url_for
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -21,7 +22,7 @@ DATABASE_USERNAME = "sz3120"
 DATABASE_PASSWRD = "zelendubrovina"
 DATABASE_HOST = "35.212.75.104" # change to 34.28.53.86 if you used database 2 for part 2
 DATABASEURI = f"postgresql://sz3120:zelendubrovina@35.212.75.104/proj1part2"
-
+item_unique_id = 0
 
 #
 # This line creates a database engine that knows how to connect to the URI above.
@@ -131,35 +132,54 @@ def get_categories_data(restaurant_id):
     return categories
 
 def get_items_data(restaurant_id):
-    select_query_items = "SELECT item_price, item_description FROM menu_items WHERE restaurant_id = :restaurant_id"
+    select_query_items = "SELECT item_price, item_description, item_id FROM menu_items WHERE restaurant_id = :restaurant_id"
     cursor = g.conn.execute(text(select_query_items), {"restaurant_id": restaurant_id})
     items = []
     for result in cursor:
-        item_price, item_description = result
-        items.append({"price": item_price, "description": item_description})
+        item_price, item_description, item_id = result
+        items.append({"price": item_price, "description": item_description, "id": item_id})
     cursor.close()
     return items
 
 
 # Example of adding new data to the database
-@app.route('/add_to_cart', methods=['POST'])
-def add_to_cart():
-	# accessing form inputs from user
-    item_id = request.form['item_id']
-    existing_order = Order.query.first()
-    current_order_id = 5
-
-    if existing_order:  # this order was already started
-        params = {}
-        params["item_id"] = item_id
-        # instead of inserting it should be appending to the list of values
-        g.conn.execute(text('INSERT INTO ORDERS(items_ordered) VALUES (:item_id)'), params)
-        g.conn.commit()
-    #else: # need to create a new order and add the item
+@app.route('/add_to_cart/<string:restaurant_id>/<string:item_id>', methods=['POST'])
+def add_to_cart(restaurant_id, item_id):
+    global item_unique_id
+    #take item_description and price from the db using id
+    select_query_item_info = "SELECT item_price, item_description FROM menu_items WHERE item_id = :item_id AND restaurant_id = :restaurant_id"
+    cursor = g.conn.execute(text(select_query_item_info), {"item_id": item_id, "restaurant_id": restaurant_id})
+    result = cursor.fetchone()
+    item_price, item_description = result
+    cursor.close()
 
 
+    #put all of it back into the table 'cart'
+    insert_query = """
+    INSERT INTO cart (item_unique_id, item_id, item_price, item_description)
+    VALUES (:item_unique_id, :item_id, :item_price, :item_description)
+    """
+    g.conn.execute(text(insert_query), {"item_unique_id": item_unique_id, "item_id": item_id, "item_price": item_price, "item_description": item_description})
+    g.conn.commit()
+    item_unique_id += 1
+    return redirect(url_for('restaurant_page', restaurant_id=restaurant_id))
 
 
+@app.route('/cart/<string:restaurant_id>')
+def cart(restaurant_id):
+    select_query_cart = "SELECT item_description, item_price FROM cart"
+    cursor = g.conn.execute(text(select_query_cart))
+    cart_items = []
+    for result in cursor:
+        item_description, item_price = result
+        cart_items.append({"item_description": item_description, "item_price": item_price})
+    cursor.close()
+    print("Cart items are " + str(cart_items))
+    return render_template('cart.html', cart_items = cart_items, restaurant_id=restaurant_id)
+
+@app.route('/user_authentication')
+def authentication():
+    return render_template
 
 @app.route('/login')
 def login():

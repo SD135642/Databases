@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<script>console.log("Restaurant_id is" + restaurant)</script>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cart</title>
+</head>
+<body>
+    <h1>Items in your cart:</h1>
+    <ul>
+    {% for item in cart_items %}
+    <h3><li>
+        {{ item.item_description }} - {{ item.item_price }}
+    </li></h3>
+    {% endfor %}
+    </ul>
+
+
+    <a href="/authentication/{{ restaurant.id }}"><button>Continue to Checkout</button></a>
+</body>
+</html>
