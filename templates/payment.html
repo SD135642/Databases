@@ -5,6 +5,19 @@
     <title>Authentication</title>
 </head>
 <body>
-    Payment!
+    <form action="/place_order/{{ customer_id }}/{{ restaurant_id }}" method="post">
+        <label for="card_number">Card Number:</label>
+        <input type="text" id="card_number" name="card_number" required><br><br>
+
+        <label for="payment_type">Payment Type:</label>
+        <select id="payment_type" name="payment_type" required>
+            <option value="Credit card">Credit</option>
+            <option value="Debit card">Debit</option>
+            <option value="cash">Cash</option>
+        </select><br><br>
+
+        <input type="submit" value="Submit Order">
+    </form>
+
 </body>
 </html>

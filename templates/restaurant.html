@@ -26,7 +26,7 @@
                     {% for item in items %}
                     <p><li>
                         {{ item.description }} - {{ item.price }}
-                        <form action="/add_to_cart/{{ restaurant.id }}/{{ item.id }}" method="post">
+                        <form action="/add_to_cart/{{ customer_id }}/{{ restaurant.id }}/{{ item.id }}" method="post">
                             <input type="submit" value="Add">
                         </form>
                     </li></p>
@@ -42,7 +42,7 @@
                     </li></p>
                     {% endfor %}
                 </ul>
-                <a href="/cart/{{ restaurant.id }}" method="post"><button>Continue to cart</button></a>
+                <a href="/cart/{{ customer_id }}/{{ restaurant.id }}" method="post"><button>Continue to cart</button></a>
             </div>
     </div>
 

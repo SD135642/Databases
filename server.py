@@ -7,12 +7,14 @@ Go to http://localhost:8111 in your browser.
 A debugger such as "pdb" may be helpful for debugging.
 Read about it online.
 """
+import json
 import os
   # accessible as a variable in homepage.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response
 from flask import Flask, request, render_template, g, redirect, Response, url_for
+from datetime import datetime
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -23,6 +25,9 @@ DATABASE_PASSWRD = "zelendubrovina"
 DATABASE_HOST = "35.212.75.104" # change to 34.28.53.86 if you used database 2 for part 2
 DATABASEURI = f"postgresql://sz3120:zelendubrovina@35.212.75.104/proj1part2"
 item_unique_id = 0
+set_payment_id = 14
+set_order_id = 14
+set_customer_id = 16
 
 #
 # This line creates a database engine that knows how to connect to the URI above.
@@ -89,28 +94,68 @@ def teardown_request(exception):
 # see for decorators: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
 #
 @app.route('/')
-def homepage():
+def index():
+    return render_template('index.html')
 
-	select_query = "SELECT restaurant_id, restaurant_name FROM RESTAURANTS"
-	cursor = g.conn.execute(text(select_query))
-	restaurants = []
-	for result in cursor:
-		restaurant_id, restaurant_name = result
-		restaurants.append({"id": restaurant_id, "name": restaurant_name})
-	cursor.close()
+@app.route('/signup')
+def user_signup():
+    return render_template('signup.html')
 
-	context = dict(data = restaurants)
-	return render_template("homepage.html", **context)
+@app.route('/login')
+def user_login():
+    return render_template('login.html')
+
+@app.route('/returning_user')
+def returning_user():
+    phone_number = request.form.get('phone_number')
+    select_query = "SELECT user_id FROM customers WHERE phone_number = :phone_number"
+    cursor = g.conn.execute(text(select_query_restaurant), {"phone_number": phone_number})
+    result = cursor.fetchone()
+    customer_id = result
+    cursor.close()
+    return render_template('homepage.html', customer_id=customer_id)
+
+@app.route('/new_user_registration', methods=['POST'])
+def user_registration():
+    global set_customer_id
+    first_name = request.form.get('first_name')
+    last_name = request.form.get('last_name')
+    email_address = request.form.get('email_address')
+    phone_number = request.form.get('phone_number')
+    customer_since = datetime.now().date()
+    customer_id = "C" + str(set_customer_id)
+    set_customer_id += 1
+
+    insert_query = """
+    INSERT INTO customers (customer_id, first_name, last_name, email_address, phone_number, customer_since)
+    VALUES (:customer_id, :first_name, :last_name, :email_address, :phone_number, :customer_since)
+    """
+    g.conn.execute(text(insert_query), {"customer_id": customer_id, "first_name": first_name, "last_name": last_name, "email_address": email_address, "phone_number": phone_number, "customer_since": customer_since})
+    g.conn.commit()
+
+    #rendering homepage
+    select_query = "SELECT restaurant_id, restaurant_name FROM RESTAURANTS"
+    cursor = g.conn.execute(text(select_query))
+    restaurants = []
+    for result in cursor:
+        restaurant_id, restaurant_name = result
+        restaurants.append({"id": restaurant_id, "name": restaurant_name})
+    cursor.close()
+
+    context = dict(data = restaurants)
+    return render_template("homepage.html", **context, customer_id=customer_id)
 
 
 
-@app.route('/restaurant/<string:restaurant_id>')
-def restaurant_page(restaurant_id):
+
+
+@app.route('/restaurant/<string:customer_id>/<string:restaurant_id>')
+def restaurant_page(customer_id, restaurant_id):
     restaurant_data = get_restaurant_info(restaurant_id)
     categories_data = get_categories_data(restaurant_id)
     items_data = get_items_data(restaurant_id)
     cart_items = get_cart()
-    return render_template('restaurant.html', restaurant=restaurant_data, categories=categories_data, items=items_data, cart_items=cart_items)
+    return render_template('restaurant.html', customer_id=customer_id, restaurant=restaurant_data, categories=categories_data, items=items_data, cart_items=cart_items)
 
 def get_restaurant_info(restaurant_id):
     select_query_restaurant = "SELECT * FROM RESTAURANTS WHERE restaurant_id = :restaurant_id"
@@ -144,8 +189,8 @@ def get_items_data(restaurant_id):
 
 
 # Example of adding new data to the database
-@app.route('/add_to_cart/<string:restaurant_id>/<string:item_id>', methods=['POST'])
-def add_to_cart(restaurant_id, item_id):
+@app.route('/add_to_cart/<string:customer_id>/<string:restaurant_id>/<string:item_id>', methods=['POST'])
+def add_to_cart(customer_id, restaurant_id, item_id):
     global item_unique_id
     #take item_description and price from the db using id
     select_query_item_info = "SELECT item_price, item_description FROM menu_items WHERE item_id = :item_id AND restaurant_id = :restaurant_id"
@@ -163,15 +208,15 @@ def add_to_cart(restaurant_id, item_id):
     g.conn.execute(text(insert_query), {"item_unique_id": item_unique_id, "item_id": item_id, "item_price": item_price, "item_description": item_description})
     g.conn.commit()
     item_unique_id += 1
-    return redirect(url_for('restaurant_page', restaurant_id=restaurant_id))
+    return redirect(url_for('restaurant_page', customer_id=customer_id, restaurant_id=restaurant_id))
 
 
-@app.route('/cart/<string:restaurant_id>')
-def cart(restaurant_id):
+@app.route('/cart/<string:customer_id>/<string:restaurant_id>')
+def cart(customer_id, restaurant_id):
     cart_items = get_cart()
     total_price = get_total_price(cart_items)
     print("Total price is " + str(total_price))
-    return render_template('cart.html', cart_items = cart_items, restaurant_id=restaurant_id, total_price=total_price)
+    return render_template('cart.html', customer_id=customer_id, cart_items = cart_items, restaurant_id=restaurant_id, total_price=total_price)
 
 def get_total_price(cart_items):
     sum = 0
@@ -191,14 +236,126 @@ def get_cart():
     print("Cart items are " + str(cart_items))
     return cart_items
 
-@app.route('/payment/<string:restaurant_id>')
-def payment(restaurant_id):
-    return render_template('payment.html', restaurant_id=restaurant_id)
+def get_cart_items(cart_items):
+    select_query_cart_items = "SELECT item_id FROM cart"
+    cursor = g.conn.execute(text(select_query_cart_items))
+    items = []
+    for result in cursor:
+        item_id = result
+        items.append({"item_id": item_id})
+    cursor.close()
+    return items
+
+
+
+def insert_cart_items():
+    select_query_cart_items = "SELECT item_id FROM cart"
+    cursor = g.conn.execute(text(select_query_cart_items))
+    for result in cursor:
+        items_ordered = str(result)
+        insert_query = """
+        INSERT INTO orders (items_ordered)
+        VALUES (:items_ordered)
+        """
+        g.conn.execute(text(insert_query), {"items_ordered": items_ordered})
+        g.conn.commit()
+    cursor.close()
+    return True
+
+
+
+
+
+@app.route('/payment/<string:customer_id>/<string:restaurant_id>')
+def payment(customer_id, restaurant_id):
+    return render_template('payment.html', restaurant_id=restaurant_id, customer_id=customer_id)
+
+
+@app.route('/rate/<string:customer_id>/<string:restaurant_id>', methods=['POST'])
+def rating(customer_id, restaurant_id):
+    rating = request.form.get('rating')
+    insert_query = """
+    INSERT INTO rate (customer_id, restaurant_id, rating)
+    VALUES (:customer_id, :restaurant_id, :rating)
+    """
+    g.conn.execute(text(insert_query), {"customer_id": customer_id, "restaurant_id": restaurant_id, "rating": rating})
+    g.conn.commit()
+    return render_template('homepage.html', customer_id=customer_id, restaurant_id=restaurant_id) ####COULD BE PROBLEMATIC
+
+
+@app.route('/place_order/<string:customer_id>/<string:restaurant_id>', methods=['POST'])
+def place_order(customer_id, restaurant_id): ###############
+    #get payment type from the form
+    payment_type = request.form.get('payment_type')
+
+    #create a new payment_id
+    global set_payment_id
+    payment_id = "PAY" + str(set_payment_id)
+    set_payment_id += 1
+
+    #create a new order_id
+    global set_order_id
+    order_id = "ORD" + str(set_order_id)
+    set_order_id += 1
+
+    #find total_price
+    cart_items = get_cart()
+    total_price = get_total_price(cart_items)
+    payment_amount = total_price
+    print("Total price is " + str(total_price))
+
+    #set payment_amount to total_price
+    #payment_amount = total_price
+    #set datetime
+    datetime_of_payment = datetime.now().date()
+    #set datetime
+    datetime_of_order = datetime.now().date()
+
+
+
+
+    #insert into orders : total_price, order_id, datetime_of_order, customer_id, restaurant_id, items_ordered
+    #insert_cart_items()
+
+    insert_query = """
+    INSERT INTO orders (order_id, datetime_of_order, customer_id, total_price, restaurant_id)
+    VALUES (:order_id, :datetime_of_order, :customer_id, :total_price, :restaurant_id)
+    """
+    g.conn.execute(text(insert_query), {"order_id": order_id, "datetime_of_order": datetime_of_order, "customer_id": customer_id, "total_price": total_price, "restaurant_id": restaurant_id})
+    g.conn.commit()
+
+
+    #insert into payment : payment_id, payment_type, payment (total) amount, datetime_of_payment, order_id, datetime_of_order
+    insert_query = """
+    INSERT INTO payment (payment_id, payment_type, payment_amount, datetime_of_payment, order_id, datetime_of_order)
+    VALUES (:payment_id, :payment_type, :payment_amount, :datetime_of_payment, :order_id, :datetime_of_order)
+    """
+    g.conn.execute(text(insert_query), {"payment_id": payment_id, "payment_type": payment_type, "payment_amount": total_price, "datetime_of_payment": datetime_of_payment, "order_id": order_id, "datetime_of_order": datetime_of_order})
+    g.conn.commit()
+
+    #insert into paid_using : payment_id, order_id
+    insert_query = """
+    INSERT INTO paid_using (payment_id, order_id)
+    VALUES (:payment_id, :order_id)
+    """
+    g.conn.execute(text(insert_query), {"payment_id": payment_id, "order_id": order_id})
+    g.conn.commit()
+
+    #clearing out the cart
+    delete_query = "DELETE FROM cart"
+    g.conn.execute(text(delete_query))
+    g.conn.commit()
+
+    return render_template('rating.html', restaurant_id=restaurant_id, customer_id=customer_id)
+
+
 
 @app.route('/login')
 def login():
     abort(401)
     this_is_never_executed()
+
+
 
 
 if __name__ == "__main__":
