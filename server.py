@@ -109,7 +109,8 @@ def restaurant_page(restaurant_id):
     restaurant_data = get_restaurant_info(restaurant_id)
     categories_data = get_categories_data(restaurant_id)
     items_data = get_items_data(restaurant_id)
-    return render_template('restaurant.html', restaurant=restaurant_data, categories=categories_data, items=items_data)
+    cart_items = get_cart()
+    return render_template('restaurant.html', restaurant=restaurant_data, categories=categories_data, items=items_data, cart_items=cart_items)
 
 def get_restaurant_info(restaurant_id):
     select_query_restaurant = "SELECT * FROM RESTAURANTS WHERE restaurant_id = :restaurant_id"
@@ -167,6 +168,19 @@ def add_to_cart(restaurant_id, item_id):
 
 @app.route('/cart/<string:restaurant_id>')
 def cart(restaurant_id):
+    cart_items = get_cart()
+    total_price = get_total_price(cart_items)
+    print("Total price is " + str(total_price))
+    return render_template('cart.html', cart_items = cart_items, restaurant_id=restaurant_id, total_price=total_price)
+
+def get_total_price(cart_items):
+    sum = 0
+    for item in cart_items:
+        sum += item['item_price']
+    print("The sum is " + str(sum))
+    return sum
+
+def get_cart():
     select_query_cart = "SELECT item_description, item_price FROM cart"
     cursor = g.conn.execute(text(select_query_cart))
     cart_items = []
@@ -175,11 +189,11 @@ def cart(restaurant_id):
         cart_items.append({"item_description": item_description, "item_price": item_price})
     cursor.close()
     print("Cart items are " + str(cart_items))
-    return render_template('cart.html', cart_items = cart_items, restaurant_id=restaurant_id)
+    return cart_items
 
-@app.route('/user_authentication')
-def authentication():
-    return render_template
+@app.route('/payment/<string:restaurant_id>')
+def payment(restaurant_id):
+    return render_template('payment.html', restaurant_id=restaurant_id)
 
 @app.route('/login')
 def login():

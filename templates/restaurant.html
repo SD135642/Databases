@@ -2,6 +2,7 @@
 <html lang="en">
 <meta charset="UTF-8">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
 <body>
     <h1>{{ restaurant.name }}</h1>
@@ -9,27 +10,43 @@
     <p>City: {{ restaurant.city }}</p>
     <p>Phone: {{ restaurant.phone_number }}</p>
     <br><hr>
-    <h1>MENU</h1>
-    <h2>Food categories:</h2>
-    <ul>
-        {% for category in categories %}
-        <h3><li>{{ category.category | replace("('", "") | replace("',)", "") }}</li></h3>
-        {% endfor %}
-    </ul>
 
-    <h2>Menu items:</h2>
-    <ul>
-        {% for item in items %}
-        <h3><li>
-            {{ item.description }} - {{ item.price }}
-            <form action="/add_to_cart/{{ restaurant.id }}/{{ item.id }}" method="post">
-                <input type="submit" value="Add">
-            </form>
-        </li></h3>
-        {% endfor %}
-    </ul>
+        <div class="row">
+            <div class="col-md-6">
+                <h1>MENU</h1>
+                <h2>Food categories:</h2>
+                <ul>
+                    {% for category in categories %}
+                    <p><li>{{ category.category | replace("('", "") | replace("',)", "") }}</li></p>
+                    {% endfor %}
+                </ul>
 
-    <a href="/cart/{{ restaurant.id }}"><button>Continue to cart</button></a>
+                <h2>Menu items:</h2>
+                <ul>
+                    {% for item in items %}
+                    <p><li>
+                        {{ item.description }} - {{ item.price }}
+                        <form action="/add_to_cart/{{ restaurant.id }}/{{ item.id }}" method="post">
+                            <input type="submit" value="Add">
+                        </form>
+                    </li></p>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h3>Your cart: </h3>
+                <ul>
+                    {% for item in cart_items %}
+                    <p><li>
+                        {{ item.item_description }} - {{ item.item_price }}
+                    </li></p>
+                    {% endfor %}
+                </ul>
+                <a href="/cart/{{ restaurant.id }}" method="post"><button>Continue to cart</button></a>
+            </div>
+    </div>
+
+
 
 
 </body>

@@ -8,15 +8,22 @@
 </head>
 <body>
     <h1>Items in your cart:</h1>
+
     <ul>
-    {% for item in cart_items %}
-    <h3><li>
-        {{ item.item_description }} - {{ item.item_price }}
-    </li></h3>
-    {% endfor %}
+
+        {% for item in cart_items %}
+            <li>
+                <h3>{{ item.item_description }} - {{ item.item_price }}</h3>
+            </li>
+        {% endfor %}
     </ul>
 
+    <h3>Total Price: {{ total_price }}</h3>
 
-    <a href="/authentication/{{ restaurant.id }}"><button>Continue to Checkout</button></a>
+
+
+
+
+<a href="/payment/{{ restaurant_id }}"><button>Continue to Checkout</button></a>
 </body>
 </html>
