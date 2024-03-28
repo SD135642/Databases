@@ -5,6 +5,7 @@
     <title>Authentication</title>
 </head>
 <body>
+    {{ error }}
     <form action="/place_order/{{ customer_id }}/{{ restaurant_id }}" method="post">
         <label for="card_number">Card Number:</label>
         <input type="text" id="card_number" name="card_number" required><br><br>

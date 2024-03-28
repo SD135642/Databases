@@ -8,12 +8,18 @@
 
     <h3>Welcome Back! Please enter your phone number to login: </h3>
 
+    {{ error }}
+
     <form action="/returning_user" method="post">
         <label for="phone_number">Phone Number:</label>
         <input type="text" id="phone_number" name="phone_number" required><br><br>
 
         <input type="submit" value="Login">
     </form>
+
+    <button onclick="window.location.href='/signup'">I need a new account</button>
+
+
 
 </body>
 </html>

@@ -12,8 +12,8 @@
 
 
   <ul>
-    {% for n in data %}
-    <div><a href="/restaurant/{{ customer_id }}/{{ n.id }}">{{ n.name }}</a></div>
+    {% for restaurant in restaurants %}
+    <div><a href="/restaurant/{{ customer_id }}/{{ restaurant.id }}">{{ restaurant.name }}</a></div>
     {% endfor %}
   </ul>
 

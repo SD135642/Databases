@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<script>console.log("Restaurant_id is" + restaurant)</script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
 <head>
     <meta charset="UTF-8">
@@ -13,7 +13,7 @@
 
         {% for item in cart_items %}
             <li>
-                <h3>{{ item.item_description }} - {{ item.item_price }}</h3>
+                <p>{{ item.item_description }} - {{ item.item_price }}</p>
             </li>
         {% endfor %}
     </ul>
@@ -23,7 +23,14 @@
 
 
 
+    <div class="row">
+        <div class="col-md-6">
+            <a href="/restaurant/{{ customer_id }}/{{ restaurant_id }}"><button><--Go back</button></a>
+        </div>
+        <div class="col-md-6">
+            <a href="/payment/{{ customer_id }}/{{ restaurant_id }}"><button>Continue to Checkout--></button></a>
+        </div>
+    </div>
 
-<a href="/payment/{{ customer_id }}/{{ restaurant_id }}"><button>Continue to Checkout</button></a>
 </body>
 </html>

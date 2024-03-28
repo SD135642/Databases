@@ -21,5 +21,10 @@
 
         <input type="submit" value="Register">
     </form>
+
+    {{ message }}
+    {% if show_button %}
+        <button onclick="window.location.href='/login'">Returning User</button>
+    {% endif %}
 </body>
 </html>

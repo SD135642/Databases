@@ -105,35 +105,7 @@ def user_signup():
 def user_login():
     return render_template('login.html')
 
-@app.route('/returning_user')
-def returning_user():
-    phone_number = request.form.get('phone_number')
-    select_query = "SELECT user_id FROM customers WHERE phone_number = :phone_number"
-    cursor = g.conn.execute(text(select_query_restaurant), {"phone_number": phone_number})
-    result = cursor.fetchone()
-    customer_id = result
-    cursor.close()
-    return render_template('homepage.html', customer_id=customer_id)
-
-@app.route('/new_user_registration', methods=['POST'])
-def user_registration():
-    global set_customer_id
-    first_name = request.form.get('first_name')
-    last_name = request.form.get('last_name')
-    email_address = request.form.get('email_address')
-    phone_number = request.form.get('phone_number')
-    customer_since = datetime.now().date()
-    customer_id = "C" + str(set_customer_id)
-    set_customer_id += 1
-
-    insert_query = """
-    INSERT INTO customers (customer_id, first_name, last_name, email_address, phone_number, customer_since)
-    VALUES (:customer_id, :first_name, :last_name, :email_address, :phone_number, :customer_since)
-    """
-    g.conn.execute(text(insert_query), {"customer_id": customer_id, "first_name": first_name, "last_name": last_name, "email_address": email_address, "phone_number": phone_number, "customer_since": customer_since})
-    g.conn.commit()
-
-    #rendering homepage
+def homepage_info():
     select_query = "SELECT restaurant_id, restaurant_name FROM RESTAURANTS"
     cursor = g.conn.execute(text(select_query))
     restaurants = []
@@ -141,12 +113,80 @@ def user_registration():
         restaurant_id, restaurant_name = result
         restaurants.append({"id": restaurant_id, "name": restaurant_name})
     cursor.close()
+    return restaurants
 
-    context = dict(data = restaurants)
-    return render_template("homepage.html", **context, customer_id=customer_id)
+@app.route('/returning_user', methods=['POST'])
+def returning_user():
+    phone_number = request.form.get('phone_number')
+    select_query = "SELECT customer_id FROM customers WHERE phone_number = :phone_number"
+    cursor = g.conn.execute(text(select_query), {"phone_number": phone_number})
+
+    try:
+        customer_id = cursor.fetchone()[0]
+        print("LOOP!")
+        cursor.close()
+        restaurants = []
+        restaurants = homepage_info()
+        return render_template('homepage.html', restaurants=restaurants, customer_id=customer_id)
+
+    except TypeError:
+        result = None
+        error = "Hmmm, it seems like you don't have an account! Please double check your phone number"
+        return render_template('login.html', error=error)
 
 
 
+
+
+@app.route('/new_user_registration', methods=['POST'])
+def user_registration():
+    phone_number = request.form.get('phone_number')
+    select_query = "SELECT customer_id FROM customers WHERE phone_number = :phone_number"
+    cursor = g.conn.execute(text(select_query), {"phone_number": phone_number})
+
+
+    try:
+        customer_id = cursor.fetchone()[0]
+        cursor.close()
+        message = "It seems like you already have an account! Please click here to log in: "
+        show_button = True
+        return render_template("signup.html", show_button=show_button, message=message)
+
+    except TypeError:
+        show_button = False
+        global set_customer_id
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        email_address = request.form.get('email_address')
+        customer_since = datetime.now().date()
+        customer_id = "C" + str(set_customer_id)
+        set_customer_id += 1
+
+        insert_query = """
+        INSERT INTO customers (customer_id, first_name, last_name, email_address, phone_number, customer_since)
+        VALUES (:customer_id, :first_name, :last_name, :email_address, :phone_number, :customer_since)
+        """
+        g.conn.execute(text(insert_query), {"customer_id": customer_id, "first_name": first_name, "last_name": last_name, "email_address": email_address, "phone_number": phone_number, "customer_since": customer_since})
+        g.conn.commit()
+
+        restaurants = []
+        restaurants = homepage_info()
+        return render_template("homepage.html", restaurants=restaurants, customer_id=customer_id)
+
+
+def clear_cart():
+    delete_query = "DELETE FROM cart"
+    g.conn.execute(text(delete_query))
+    g.conn.commit()
+    item_unique_id = 0
+    return
+
+@app.route('/restaurant/back/<string:customer_id>')
+def back_to_homepage(customer_id):
+    clear_cart()
+    restaurants = []
+    restaurants = homepage_info()
+    return render_template("homepage.html", restaurants=restaurants, customer_id=customer_id)
 
 
 @app.route('/restaurant/<string:customer_id>/<string:restaurant_id>')
@@ -280,13 +320,22 @@ def rating(customer_id, restaurant_id):
     """
     g.conn.execute(text(insert_query), {"customer_id": customer_id, "restaurant_id": restaurant_id, "rating": rating})
     g.conn.commit()
-    return render_template('homepage.html', customer_id=customer_id, restaurant_id=restaurant_id) ####COULD BE PROBLEMATIC
+
+    restaurants = []
+    restaurants = homepage_info()
+
+    return render_template('homepage.html', restaurants=restaurants, customer_id=customer_id)
 
 
 @app.route('/place_order/<string:customer_id>/<string:restaurant_id>', methods=['POST'])
-def place_order(customer_id, restaurant_id): ###############
+def place_order(customer_id, restaurant_id):
     #get payment type from the form
     payment_type = request.form.get('payment_type')
+    card_number = request.form.get('card_number')
+    if not (card_number.isdigit() and len(card_number) == 16):
+        error = "Please enter a valid card number, without dashes"
+        return render_template('payment.html', restaurant_id=restaurant_id, customer_id=customer_id, error=error)
+
 
     #create a new payment_id
     global set_payment_id
@@ -342,9 +391,7 @@ def place_order(customer_id, restaurant_id): ###############
     g.conn.commit()
 
     #clearing out the cart
-    delete_query = "DELETE FROM cart"
-    g.conn.execute(text(delete_query))
-    g.conn.commit()
+    clear_cart()
 
     return render_template('rating.html', restaurant_id=restaurant_id, customer_id=customer_id)
 
