@@ -252,14 +252,14 @@ def add_to_cart(customer_id, restaurant_id, item_id):
 
 # Example of removing data from the cart
 @app.route('/remove_from_cart/<string:customer_id>/<int:item_unique_id>', methods=['POST'])
-def remove_from_cart(customer_id, item_unique_id):
+def remove_from_cart(customer_id, item_id):
     
     # Perform the removal of the item from the cart in the database
     delete_query = """
     DELETE FROM cart
-    WHERE customer_id = :customer_id AND item_unique_id = :item_unique_id
+    WHERE customer_id = :customer_id AND item_id = :item_id
     """
-    g.conn.execute(text(delete_query), {"customer_id": customer_id, "item_unique_id": item_unique_id})
+    g.conn.execute(text(delete_query), {"customer_id": customer_id, "item_id": item_id})
     g.conn.commit()
     return redirect(url_for('restaurant_page', customer_id=customer_id))  # Redirect to the restaurant page after removing the item
 
