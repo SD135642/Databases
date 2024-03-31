@@ -39,9 +39,9 @@
                         {% for item in cart_items %}
                         <li>
                             {{ item.item_description }} - {{ item.item_price }}
-                            <form action="/remove_from_cart/{{ customer_id }}/{{ item.id }}" method="post">
+                            <form action="/remove_from_cart/{{ customer_id }}/{{ restaurant.id }}/{{ item.item_id }}" method="post">
                                 <button type="submit">Remove</button>
-                            </form>
+                            </form>                            
                         </li>
                         {% endfor %}
                     </ul>
