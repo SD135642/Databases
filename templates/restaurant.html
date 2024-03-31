@@ -37,12 +37,12 @@
                     <h3>Your cart from {{ restaurant.name }}: </h3>
                     <ul>
                         {% for item in cart_items %}
-                        <li>
+                        <p><li>
                             {{ item.item_description }} - {{ item.item_price }}
                             <form action="/remove_from_cart/{{ customer_id }}/{{ restaurant.id }}/{{ item.item_unique_id}}" method="post">
                                 <input type="submit" value="Remove">
                             </form>                            
-                        </li>
+                        </li></p>
                         {% endfor %}
                     </ul>
                     <div class="row">
