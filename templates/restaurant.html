@@ -32,29 +32,30 @@
                     </li></p>
                     {% endfor %}
                 </ul>
-            </div>
-            <div class="col-md-6">
-                <h3>Your cart from {{ restaurant.name }}: </h3>
-                <ul>
-                    {% for item in cart_items %}
-                    <p><li>
-                        {{ item.item_description }} - {{ item.item_price }}
-                    </li></p>
-                    {% endfor %}
-                </ul>
-                <div class="row">
-                    <div class="col-md-6">
-                        <a href="/restaurant/back/{{ customer_id }}" method="post"><button><--Go back</button></a>
-                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h3>Your cart from {{ restaurant.name }}: </h3>
+                    <ul>
+                        {% for item in cart_items %}
+                        <li>
+                            {{ item.item_description }} - {{ item.item_price }}
+                            <form action="/remove_from_cart/{{ customer_id }}/{{ item.id }}" method="post">
+                                <button type="submit">Remove</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="/restaurant/back/{{ customer_id }}" method="post"><button><--Go back</button></a>
+                        </div>
 
-                    <div class="col-md-6">
-                        <a href="/cart/{{ customer_id }}/{{ restaurant.id }}" method="post"><button>Continue to cart--></button></a>
-                    </div>
+                        <div class="col-md-6">
+                            <a href="/cart/{{ customer_id }}/{{ restaurant.id }}" method="post"><button>Continue to cart--></button></a>
+                        </div>
                 </div>
             </div>
-    </div>
-
-
+        </div>
 
 
 </body>
