@@ -249,7 +249,7 @@ def add_to_cart(customer_id, restaurant_id, item_id):
     item_unique_id += 1
     return redirect(url_for('restaurant_page', customer_id=customer_id, restaurant_id=restaurant_id))
 
-@app.route('/remove_from_cart/<string:customer_id>/<string:restaurant_id>/<string:item_unique_id>', methods=['POST'])
+@app.route('/remove_from_cart/<string:customer_id>/<string:restaurant_id>/<int:item_unique_id>', methods=['POST'])
 def remove_from_cart(customer_id, restaurant_id, item_unique_id):
     # Delete the item from the cart based on item_unique_id
     delete_query = """
