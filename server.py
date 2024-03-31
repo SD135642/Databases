@@ -322,7 +322,7 @@ def rating(customer_id, restaurant_id):
     restaurants = []
     restaurants = homepage_info()
 
-    return render_template('homepage.html', restaurants=restaurants, customer_id=customer_id)
+    return render_template('index.html', restaurants=restaurants, customer_id=customer_id)
 
 
 @app.route('/place_order/<string:customer_id>/<string:restaurant_id>', methods=['POST'])
