@@ -252,6 +252,7 @@ def add_to_cart(customer_id, restaurant_id, item_id):
 @app.route('/remove_from_cart/<string:customer_id>/<string:restaurant_id>/<int:item_unique_id>', methods=['POST'])
 def remove_from_cart(customer_id, restaurant_id, item_unique_id):
     # Delete the item from the cart based on item_unique_id
+    print("Received request to remove item with item_unique_id:", item_unique_id)
     delete_query = """
     DELETE FROM cart
     WHERE item_unique_id = :item_unique_id
