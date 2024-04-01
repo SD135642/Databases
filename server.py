@@ -123,7 +123,6 @@ def returning_user():
 
     try:
         customer_id = cursor.fetchone()[0]
-        print("LOOP!")
         cursor.close()
         restaurants = []
         restaurants = homepage_info()
@@ -235,12 +234,10 @@ def get_cart():
         item_unique_id, item_description, item_price, item_id = result
         cart_items.append({"item_unique_id": item_unique_id, "item_id": item_id, "item_description": item_description, "item_price": item_price})
     cursor.close()
-    print("Cart items are " + str(cart_items))
     return cart_items
 
 @app.route('/remove_from_cart/<string:customer_id>/<string:restaurant_id>/<string:item_unique_id>', methods=['POST'])
 def remove_from_cart(customer_id, restaurant_id, item_unique_id):
-    print("ITEM UNIQUE ID IS " + item_unique_id)
     remove_query = "DELETE FROM cart WHERE item_unique_id = :item_unique_id"
     cursor = g.conn.execute(text(remove_query), {"item_unique_id": item_unique_id})
     g.conn.commit()
@@ -273,14 +270,12 @@ def add_to_cart(customer_id, restaurant_id, item_id):
 def cart(customer_id, restaurant_id):
     cart_items = get_cart()
     total_price = get_total_price(cart_items)
-    print("Total price is " + str(total_price))
     return render_template('cart.html', customer_id=customer_id, cart_items = cart_items, restaurant_id=restaurant_id, total_price=total_price)
 
 def get_total_price(cart_items):
     sum = 0
     for item in cart_items:
         sum += item['item_price']
-    print("The sum is " + str(sum))
     return sum
 
 
@@ -359,7 +354,6 @@ def place_order(customer_id, restaurant_id):
     cart_items = get_cart()
     total_price = get_total_price(cart_items)
     payment_amount = total_price
-    print("Total price is " + str(total_price))
 
     #set payment_amount to total_price
     #payment_amount = total_price
