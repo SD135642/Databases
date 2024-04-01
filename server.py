@@ -227,6 +227,26 @@ def get_items_data(restaurant_id):
     cursor.close()
     return items
 
+def get_cart():
+    select_query_cart = "SELECT item_unique_id, item_description, item_price, item_id FROM cart"
+    cursor = g.conn.execute(text(select_query_cart))
+    cart_items = []
+    for result in cursor:
+        item_unique_id, item_description, item_price, item_id = result
+        cart_items.append({"item_unique_id": item_unique_id, "item_id": item_id, "item_description": item_description, "item_price": item_price})
+    cursor.close()
+    print("Cart items are " + str(cart_items))
+    return cart_items
+
+@app.route('/remove_from_cart/<string:customer_id>/<string:restaurant_id>/<string:item_unique_id>', methods=['POST'])
+def remove_from_cart(customer_id, restaurant_id, item_unique_id):
+    print("ITEM UNIQUE ID IS " + item_unique_id)
+    remove_query = "DELETE FROM cart WHERE item_unique_id = :item_unique_id"
+    cursor = g.conn.execute(text(remove_query), {"item_unique_id": item_unique_id})
+    g.conn.commit()
+    return redirect(url_for('restaurant_page', customer_id=customer_id, restaurant_id=restaurant_id))
+
+
 
 # Example of adding new data to the database
 @app.route('/add_to_cart/<string:customer_id>/<string:restaurant_id>/<string:item_id>', methods=['POST'])
@@ -263,16 +283,6 @@ def get_total_price(cart_items):
     print("The sum is " + str(sum))
     return sum
 
-def get_cart():
-    select_query_cart = "SELECT item_description, item_price FROM cart"
-    cursor = g.conn.execute(text(select_query_cart))
-    cart_items = []
-    for result in cursor:
-        item_description, item_price = result
-        cart_items.append({"item_description": item_description, "item_price": item_price})
-    cursor.close()
-    print("Cart items are " + str(cart_items))
-    return cart_items
 
 def get_cart_items(cart_items):
     select_query_cart_items = "SELECT item_id FROM cart"
