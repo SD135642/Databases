@@ -2,14 +2,15 @@
 
 <h2>The PostgreSQL account where the database resides: </h2>
 
+<hr>
 
 <h2>The URL of your web application. </h2>
 http://127.0.0.1:8111
-
+<hr>
 
 <h2>A description of the parts of your original proposal in Part 1 that you implemented, the parts you did not, and possibly new features that were not included in the proposal and that you implemented anyway. </h2>
   We implemented all features of part 1, building an application that allows the customer to enter their information, choose a restaurant they want to order food from, add items from the menu to the cart, enter payment information, place the order, and leave a rating of the restaurant. The new features we implemented are two ways of logging in, via signing up and loging in as an existing customer, and deleting items from a cart. The only changes made to part 1 were minor modifications to the database, such as deleting the column “order status” from orders due to its irrelevancy in online ordering, and adding a table “cart” to be populated with cart items.
-
+<hr>
 <h2>Briefly describe two of the web pages that require (what you consider) the most interesting database operations in terms of what the pages are used for, how the page is related to the database operations, and why you think they are interesting. </h2>
 
 <h3>payment.html </h3>
