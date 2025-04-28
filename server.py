@@ -1,15 +1,6 @@
-"""
-Columbia's COMS W4111.001 Introduction to Databases
-Example Webserver
-To run locally:
-    python server.py
-Go to http://localhost:8111 in your browser.
-A debugger such as "pdb" may be helpful for debugging.
-Read about it online.
-"""
 import json
 import os
-  # accessible as a variable in homepage.html:
+
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response
@@ -22,7 +13,7 @@ app = Flask(__name__, template_folder=tmpl_dir)
 
 DATABASE_USERNAME = "sz3120"
 DATABASE_PASSWRD = "zelendubrovina"
-DATABASE_HOST = "35.212.75.104" # change to 34.28.53.86 if you used database 2 for part 2
+DATABASE_HOST = "35.212.75.104" 
 DATABASEURI = f"postgresql://sz3120:zelendubrovina@35.212.75.104/proj1part2"
 item_unique_id = 0
 set_payment_id = 14
@@ -34,10 +25,6 @@ set_customer_id = 16
 #
 engine = create_engine(DATABASEURI)
 
-#
-# Example of running queries in your database
-# Note that this will probably not work if you already have a table named 'test' in your database, containing meaningful data. This is only an example showing you how to run queries in your database using SQLAlchemy.
-#
 with engine.connect() as conn:
 	create_table_command = """
 	CREATE TABLE IF NOT EXISTS test (
@@ -80,19 +67,7 @@ def teardown_request(exception):
 		pass
 
 
-#
-# @app.route is a decorator around homepage() that means:
-#   run homepage() whenever the user tries to access the "/" path using a GET request
-#
-# If you wanted the user to go to, for example, localhost:8111/foobar/ with POST or GET then you could use:
-#
-#       @app.route("/foobar/", methods=["POST", "GET"])
-#
-# PROTIP: (the trailing / in the path is important)
-# 
-# see for routing: https://flask.palletsprojects.com/en/1.1.x/quickstart/#routing
-# see for decorators: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
-#
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -245,11 +220,11 @@ def remove_from_cart(customer_id, restaurant_id, item_unique_id):
 
 
 
-# Example of adding new data to the database
+
 @app.route('/add_to_cart/<string:customer_id>/<string:restaurant_id>/<string:item_id>', methods=['POST'])
 def add_to_cart(customer_id, restaurant_id, item_id):
     global item_unique_id
-    #take item_description and price from the db using id
+
     select_query_item_info = "SELECT item_price, item_description FROM menu_items WHERE item_id = :item_id AND restaurant_id = :restaurant_id"
     cursor = g.conn.execute(text(select_query_item_info), {"item_id": item_id, "restaurant_id": restaurant_id})
     result = cursor.fetchone()
